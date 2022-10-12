@@ -14,6 +14,8 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.persistence.EntityManager;
 import java.util.List;
 
+import static com.study.query.entity.QMember.member;
+
 @SpringBootTest
 @Transactional
 public class QueryDslBasicTest {
@@ -57,12 +59,44 @@ public class QueryDslBasicTest {
     @Test
     public void startQueryDsl(){
         // JPAQueryFactory queryFactory = new JPAQueryFactory(em); 필드레벨로 가져가도 된다.(동시성 문제 걱정X - 설계가 되어있음)
-        QMember m = new QMember("m");
 
-        Member findMember = queryFactory.select(m).
-                from(m).
-                where(m.username.eq("member1")).
-                fetchOne();
+        // 기본 Q-Type 활용
+        // 1. QMember m = new QMember("m");
+        // 2. QMember m = QMember.member
+        // 3. QMember.member static import사용 (alt+enter)
+
+
+        // querydsl은 결국 JPQL빌더 역할이다.(콘솔창에서 JPQL을 확인하고 싶다면 yml파일에 추가)
+
+        Member findMember = queryFactory
+                .select(member)
+                .from(member)
+                .where(member.username.eq("member1")) //파라미터 바인딩 처리를 해줌.
+                .fetchOne();
+
+        Assertions.assertThat(findMember.getUsername()).isEqualTo("member1");
+    }
+
+    @Test
+    public void search(){
+        Member findMember = queryFactory
+                .selectFrom(member)
+                .where(member.username.eq("member1").and(member.age.eq(10)))
+                .fetchOne();
+
+        Assertions.assertThat(findMember.getUsername()).isEqualTo("member1");
+    }
+
+    @Test
+    public void searchAndParam(){
+        Member findMember = queryFactory
+                .selectFrom(member)
+                // 위에 and랑 동일.
+                .where(
+                        member.username.eq("member1"),
+                        member.age.eq(10)
+                )
+                .fetchOne();
 
         Assertions.assertThat(findMember.getUsername()).isEqualTo("member1");
     }
