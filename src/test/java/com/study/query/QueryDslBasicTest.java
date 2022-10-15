@@ -121,7 +121,7 @@ public class QueryDslBasicTest {
      * 회원 정렬 순서
      * 1. 회원 나이 내림차순
      * 2. 회원 이름 올림차순
-     * 3. 단 2에서 회원이름이 없으면 마지막에 출력(nulls last)
+     * 3. 단, 2에서 회원이름이 없으면 마지막에 출력(nulls last)
      */
     @Test
     public void sort(){
