@@ -236,11 +236,11 @@ public class QueryDslBasicTest {
      * 1. 조인 대상 필터링.
      * 2. 연관관계 없는 엔티티 외부 조인. (이떄 많이 쓰임)
      *
-     * 회원과 팀을 조인하면서, 팀 이름이 teamA인 팀만 조인, 회원은 모두 조회.
+     * 1) 회원과 팀을 조인하면서, 팀 이름이 teamA인 팀만 조인, 회원은 모두 조회.
      * JPQL : select m, t from member m left join m.team t on t.name = 'teamA';
      */
     @Test
-    public void join_on(){
+    public void join_on_filter(){
 
         // select가 여러가지 타입이라서 tuple로 나옴.
         List<Tuple> result = queryFactory
@@ -248,5 +248,29 @@ public class QueryDslBasicTest {
                 .from(member)
                 .leftJoin(member.team, team).on(team.name.eq("teamA"))
                 .fetch();
+    }
+
+    /**
+     * 2) 회원의 이름이 팀이름과 같은 대상 외부 조인
+     */
+    @Test
+    public void join_on_no_relation(){
+        em.persist(new Member("teamA"));
+        em.persist(new Member("teamB"));
+
+        List<Tuple> result = queryFactory
+                .select(member, team)
+                .from(member)
+                // 멤버 이름과 팀이름이 같은 것을 막 조인한다.
+                // on절은 필터한다고 생각.
+                .leftJoin(team).on(member.username.eq(team.name)) // on ( member.username = team.name)
+                // .leftJoin(member.team, team).on(member.username.eq(team.name)) // member.id = team.id 가 들어감.
+                // 두개의 차이를 생각.
+                .where(member.username.eq(team.name))
+                .fetch();
+
+        Assertions.assertThat(result)
+                .extracting("username")
+                .containsExactly("teamA","teamB");
     }
 }
